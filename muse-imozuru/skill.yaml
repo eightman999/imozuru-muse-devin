@@ -1,0 +1,5 @@
+name: muse-imozuru
+title: Muse Imozuru Research
+description: Dig into an unfamiliar field imozuru-style with the Muse port of MaryCache/imozuru: map the field's terms, people and venues, follow citations, links and authors to the original sources, save them unsummarized under ~/workspace/research/, and build a machine-checked extract page and report.
+category: Work and knowledge
+include_in_prompt: false

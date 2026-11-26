@@ -1,0 +1,37 @@
+#!/bin/bash
+# Remote tesseract shim: runs OCR on imac (i7-7700, 8 threads) instead of
+# this CPU-starved VM. Interface-compatible with the two call shapes
+# fetch.py uses:
+#   tesseract --list-langs
+#   tesseract <img> <out> -l <langs> -c key=value ...
+# Files are copied to a temp dir on imac, OCR runs there, results are
+# copied back as <out>.txt / <out>.tsv. Set IMOZURU_OCR_HOST to change
+# the target host (default imac), or IMOZURU_OCR_LOCAL=1 to use a local
+# tesseract if one exists.
+set -u
+SSH="ssh -F $HOME/.ssh/config -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15"
+SCP="scp -F $HOME/.ssh/config -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15"
+HOST="${IMOZURU_OCR_HOST:-imac}"
+if [ "${IMOZURU_OCR_LOCAL:-}" = "1" ] && command -v /usr/bin/tesseract >/dev/null; then
+  exec /usr/bin/tesseract "$@"
+fi
+if [ "${1:-}" = "--list-langs" ]; then
+  exec $SSH "$HOST" "tesseract --list-langs"
+fi
+img="${1:-}"; out="${2:-}"
+if [ -z "$img" ] || [ -z "$out" ]; then
+  echo "tesseract shim: unsupported arguments: $*" >&2; exit 2
+fi
+shift 2
+rdir="$($SSH "$HOST" 'mktemp -d /tmp/imozuru-ocr.XXXXXX')" || exit 1
+cleanup() { $SSH "$HOST" "rm -rf '$rdir'" >/dev/null 2>&1; }
+trap cleanup EXIT
+base="$(basename "$img")"
+$SCP -q "$img" "$HOST:$rdir/$base" || exit 1
+$SSH "$HOST" "cd '$rdir' && tesseract '$base' out $* " 
+rc=$?
+# tesseract writes out.txt / out.tsv next to the (remote) output base;
+# fetch.py expects them at <out>.txt / <out>.tsv locally.
+$SCP -q "$HOST:$rdir/out.txt" "$out.txt" 2>/dev/null
+$SCP -q "$HOST:$rdir/out.tsv" "$out.tsv" 2>/dev/null
+exit $rc

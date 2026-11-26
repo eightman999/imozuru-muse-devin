@@ -1,0 +1,36 @@
+#!/bin/bash
+# Remote yt-dlp shim: runs yt-dlp on imac (residential egress, better
+# YouTube reachability than this VM's cloud egress). Handles the two
+# call shapes fetch.py uses: metadata/subtitle probes (stdout only) and
+# subtitle downloads with -o <dir>/v.%(ext)s (files copied back).
+set -u
+SSH="ssh -F $HOME/.ssh/config -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15"
+SCP="scp -F $HOME/.ssh/config -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=15"
+HOST="${IMOZURU_YTDLP_HOST:-imac}"
+REMOTE='export PATH="$HOME/.local/bin:$PATH"; yt-dlp'
+# find -o argument
+outtmpl=""; prev=""
+for a in "$@"; do
+  if [ "$prev" = "-o" ]; then outtmpl="$a"; fi
+  prev="$a"
+done
+if [ -z "$outtmpl" ]; then
+  exec $SSH "$HOST" "$REMOTE $(printf '%q ' "$@")"
+fi
+localdir="$(dirname "$outtmpl")"
+rdir="$($SSH "$HOST" 'mktemp -d /tmp/imozuru-ytdlp.XXXXXX')" || exit 1
+cleanup() { $SSH "$HOST" "rm -rf '$rdir'" >/dev/null 2>&1; }
+trap cleanup EXIT
+# rebuild args with remote -o template
+args=(); prev=""
+for a in "$@"; do
+  if [ "$prev" = "-o" ]; then a="$rdir/$(basename "$outtmpl")"; fi
+  args+=("$a"); prev="$a"
+done
+$SSH "$HOST" "$REMOTE $(printf '%q ' "${args[@]}")"
+rc=$?
+# copy back whatever subtitle files were produced
+for f in $($SSH "$HOST" "ls '$rdir'" 2>/dev/null); do
+  $SCP -q "$HOST:$rdir/$f" "$localdir/$f" 2>/dev/null
+done
+exit $rc
