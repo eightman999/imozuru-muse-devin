@@ -29,7 +29,7 @@ Then ask Muse for a dig in Japanese (「芋づる式に調べて: …」), or ru
 The wrapper `run-imozuru.sh` is the only supported way to call the engine. It:
 
 - prepends `engine/shims/` to `PATH`, so `tesseract` and `yt-dlp` resolve to the remote shims
-- sets `IMOZURU_ALLOW_PRIVATE=1` for that invocation only. Some environments (fake-IP DNS in VPN/proxy setups, e.g. Clash/Surge-style resolvers or this VM's egress proxy) resolve **every** hostname into a non-global range such as 198.18.0.0/15, which makes upstream `fetch.py`'s SSRF guard reject every URL. The variable lifts the guard; never set it globally, and never fetch local/LAN addresses on purpose.
+- sets `IMOZURU_ALLOW_FAKE_IP=1` for that invocation only (a narrow opt-in that passes just 198.18.0.0/15, proposed upstream in MaryCache/imozuru#26; the engine in this repo carries that patch locally). Some environments (fake-IP DNS in VPN/proxy setups, e.g. Clash/Surge-style resolvers or this VM's egress proxy) resolve **every** hostname into a non-global range such as 198.18.0.0/15, which makes upstream `fetch.py`'s SSRF guard reject every URL. The variable lifts the guard; never set it globally, and never fetch local/LAN addresses on purpose.
 
 ## Remote OCR / yt-dlp shims
 

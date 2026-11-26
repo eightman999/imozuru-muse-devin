@@ -44,7 +44,7 @@ watch.tsv / watch/ … 見張りモードを使ったときだけ
 
 `~/.config/devin/skills/devin-imozuru/scripts/run-imozuru.sh <tool> ...`
 
-ラッパーはこのVMのDNS事情（全ホスト名が 198.18/15 に解決され、素のままだと fetch.py のSSRFガードが全URLを弾く）に対応するため `IMOZURU_ALLOW_PRIVATE=1` をこの実行にだけ付ける。ユーザーが2026-11-26に承認した範囲はこのラッパー経由だけ。ラッパー外でこの環境変数を付けない。手元・LANの宛先へはラッパー経由でも取りに行かない。
+ラッパーはこのVMのDNS事情（全ホスト名が 198.18/15 に解決され、素のままだと fetch.py のSSRFガードが全URLを弾く）に対応するため `IMOZURU_ALLOW_FAKE_IP=1`（198.18.0.0/15 だけを通す狭い opt-in。上流 PR #26 で提案したもの）をこの実行にだけ付ける。ユーザーが2026-11-26に承認した範囲はこのラッパー経由だけ。ラッパー外でこの環境変数を付けない。手元・LANの宛先へはラッパー経由でも取りに行かない。
 
 - `fetch <sources_dir> <name> <url> [--no-fallback]`: 取得と本物検査。OKが出たものだけ原文の表に足す。FAILは理由とURLを log.md へ
 - `ingest <sources_dir> (--file <path> [--name <name>] [--url <url>] | --inbox <dir>) [--short-ok]`: ブラウザで保存したローカル資料を検証付きで取り込む

@@ -16,7 +16,7 @@
 
 ## 道具（全部ラッパー経由）
 
-エンジンのスクリプトは必ず `~/workspace/custom-skills/muse-imozuru/scripts/run-imozuru.sh <tool> ...` で呼ぶ。ラッパーはこのVMのDNS事情（全ホスト名が 198.18/15 に解決され、素のままだと fetch.py のSSRFガードが全URLを弾く）に対応するため、`IMOZURU_ALLOW_PRIVATE=1` をこの実行にだけ付ける。本人が2026-11-26に承認した範囲はこのラッパー経由だけ。ラッパー外でこの環境変数を付けない。手元・LANの宛先へはラッパー経由でも取りに行かない。
+エンジンのスクリプトは必ず `~/workspace/custom-skills/muse-imozuru/scripts/run-imozuru.sh <tool> ...` で呼ぶ。ラッパーはこのVMのDNS事情（全ホスト名が 198.18/15 に解決され、素のままだと fetch.py のSSRFガードが全URLを弾く）に対応するため、`IMOZURU_ALLOW_FAKE_IP=1`（198.18.0.0/15 だけを通す狭い opt-in。上流 PR #26 で提案したもの）をこの実行にだけ付ける。本人が2026-11-26に承認した範囲はこのラッパー経由だけ。ラッパー外でこの環境変数を付けない。手元・LANの宛先へはラッパー経由でも取りに行かない。
 
 - `fetch <sources_dir> <name> <url> [--no-fallback]` : 原文の取得と本物検査。OKが出たものだけ原文の表へ
 - `ingest <sources_dir> (--file <path> | --inbox <dir>) [--short-ok]` : ブラウザ等で保存したローカル資料の取り込み
